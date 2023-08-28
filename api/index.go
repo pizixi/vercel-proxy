@@ -24,6 +24,6 @@ func init() {
 	srv = e
 }
 
-func Ф(w http.ResponseWriter, r *http.Request) {
+func Proxy(w http.ResponseWriter, r *http.Request) {
 	srv.ServeHTTP(w, r)
 }
