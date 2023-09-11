@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var srv http.Handler
+var srv *gin.Engine // 注意这里改为 *gin.Engine
 
 func init() {
 	proxyURL := os.Getenv("Proxy_URL")
