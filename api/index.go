@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
 var srv http.Handler
@@ -16,12 +16,12 @@ func init() {
 	target, _ := url.Parse(proxyURL)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
-	r := gin.Default()
-	r.Any("/*any", func(c *gin.Context) {
-		proxy.ServeHTTP(c.Writer, c.Request)
-		c.Abort() // 在代理请求后终止处理链
+	e := echo.New()
+	e.Any("/*", func(c echo.Context) error {
+		proxy.ServeHTTP(c.Response().Writer, c.Request())
+		return nil
 	})
-	srv = r
+	srv = e
 }
 
 func Proxy(w http.ResponseWriter, r *http.Request) {
