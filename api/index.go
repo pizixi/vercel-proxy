@@ -63,6 +63,7 @@ func init() {
 	srv = e
 }
 
+// Proxy Proxy
 func Proxy(w http.ResponseWriter, r *http.Request) {
 	srv.ServeHTTP(w, r)
 }
