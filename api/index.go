@@ -18,8 +18,7 @@ func init() {
 
 	e := echo.New()
 	e.Any("/*", func(c echo.Context) error {
-		// 设置请求的Host头
-		c.Request().Host = target.Host
+		
 		proxy.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	})
