@@ -1,12 +1,10 @@
 package handler
 
 import (
-	"context"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -18,16 +16,13 @@ func init() {
 	target, _ := url.Parse(proxyURL)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
-	// 设置流式输出
-	proxy.FlushInterval = time.Millisecond * 100
+	// 设置超时时间
+	proxy.Transport = &http.Transport{
+		ResponseHeaderTimeout: 50,
+	}
 
 	e := echo.New()
 	e.Any("/*", func(c echo.Context) error {
-		// 设置请求超时
-		ctx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(50)*time.Second)
-		defer cancel()
-		c.SetRequest(c.Request().WithContext(ctx))
-
 		proxy.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	})
