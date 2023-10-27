@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"io"
+	"context"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -18,34 +18,17 @@ func init() {
 	target, _ := url.Parse(proxyURL)
 	proxy := httputil.NewSingleHostReverseProxy(target)
 
+	// 设置流式输出
+	proxy.FlushInterval = time.Millisecond * 100
+
 	e := echo.New()
 	e.Any("/*", func(c echo.Context) error {
-		// 设置超时时间
-		timeout := time.Duration(50) * time.Second
-		ctx := c.Request().Context()
-		ctx, cancel := context.WithTimeout(ctx, timeout)
+		// 设置请求超时
+		ctx, cancel := context.WithTimeout(c.Request().Context(), time.Duration(50)*time.Second)
 		defer cancel()
 		c.SetRequest(c.Request().WithContext(ctx))
 
-		// 创建目标响应的主体
-		pipeReader, pipeWriter := io.Pipe()
-		defer pipeReader.Close()
-
-		// 修改源和目标的响应主体
-		c.Response().Writer = pipeWriter
-		proxy.Transport = &http.Transport{
-			Proxy: http.ProxyURL(target),
-		}
-
-		// 复制源响应的主体到目标响应的主体
-		go func() {
-			defer pipeWriter.Close()
-			proxy.ServeHTTP(c.Response().Writer, c.Request())
-		}()
-
-		// 将目标响应的主体复制到客户端的响应主体
-		io.Copy(c.Response().Writer, pipeReader)
-
+		proxy.ServeHTTP(c.Response().Writer, c.Request())
 		return nil
 	})
 	srv = e
